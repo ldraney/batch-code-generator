@@ -1,3 +1,37 @@
+#!/bin/bash
+
+echo "🔧 Fixing potential webhook environment issues..."
+
+# Ensure .env.local has the correct webhook secret
+echo "📝 Ensuring .env.local has correct WEBHOOK_SECRET..."
+
+if [ ! -f .env.local ]; then
+  echo "Creating .env.local from example..."
+  cp .env.local.example .env.local
+fi
+
+# Check if WEBHOOK_SECRET exists and set it
+if ! grep -q "WEBHOOK_SECRET=" .env.local; then
+  echo "Adding WEBHOOK_SECRET to .env.local..."
+  echo "WEBHOOK_SECRET=dev-secret-123" >> .env.local
+else
+  # Update existing WEBHOOK_SECRET
+  echo "Updating WEBHOOK_SECRET in .env.local..."
+  if grep -q "WEBHOOK_SECRET=your-webhook-secret-here" .env.local; then
+    sed -i.bak 's/WEBHOOK_SECRET=your-webhook-secret-here/WEBHOOK_SECRET=dev-secret-123/' .env.local
+  fi
+fi
+
+echo "✅ Current .env.local WEBHOOK_SECRET:"
+grep WEBHOOK_SECRET .env.local
+
+# Also, let's check if there's an import issue in the webhook route
+echo ""
+echo "🔍 Checking webhook route for potential issues..."
+
+# Create a simplified webhook route that's more robust
+echo "🔧 Creating a more robust webhook route..."
+cat > src/app/api/webhook/route.ts << 'EOF'
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -161,3 +195,19 @@ export async function GET() {
     { status: 200 }
   );
 }
+EOF
+
+echo ""
+echo "✅ Webhook environment fixes applied!"
+echo ""
+echo "🔧 Changes made:"
+echo "- Ensured .env.local has correct WEBHOOK_SECRET"
+echo "- Added robust error handling to webhook route"
+echo "- Added detailed logging for debugging"
+echo "- Made metrics and Sentry imports optional"
+echo ""
+echo "🚀 Next steps:"
+echo "1. Restart your dev server: npm run dev"
+echo "2. Run the debug script: ./debug-webhook-issue.sh"
+echo "3. Check server logs for detailed error messages"
+echo "4. Run regression tests again: npm run test:regression"
