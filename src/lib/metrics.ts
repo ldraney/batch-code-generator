@@ -11,7 +11,8 @@ function initializeDefaultMetrics() {
       console.log('✅ Prometheus default metrics initialized');
     } catch (error) {
       // If metrics are already registered, that's fine in development
-      if (error.message?.includes('already been registered')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('already been registered')) {
         console.log('⚠️  Prometheus metrics already registered (development mode)');
         defaultMetricsInitialized = true;
       } else {
@@ -40,7 +41,8 @@ function createOrGetMetric<T>(
     // Create new metric if it doesn't exist
     return new MetricClass(config);
   } catch (error) {
-    if (error.message?.includes('already been registered')) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('already been registered')) {
       // Return the existing metric
       return register.getSingleMetric(metricName) as T;
     }
@@ -181,9 +183,10 @@ export function getMetricsHealth() {
       defaultMetricsInitialized
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 'unhealthy',
-      error: error.message,
+      error: errorMessage,
       defaultMetricsInitialized
     };
   }
