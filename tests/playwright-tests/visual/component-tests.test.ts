@@ -126,29 +126,49 @@ test.describe('Component Regression Tests', () => {
   })
 
   test('dashboard should handle API failures gracefully', async ({ page }) => {
-    // Mock API to return error
+    // Mock the API to return an error BEFORE navigating to the page
     await page.route('/api/health', route => {
       route.fulfill({
         status: 500,
+        contentType: 'application/json',
         body: JSON.stringify({ error: 'Internal Server Error' })
       })
     })
 
+    // Navigate to the page
     await page.goto('/')
     
-    // Dashboard should still load (it loads first, then makes API call)
-    await page.waitForSelector('[data-testid="dashboard"]', { timeout: 10000 })
+    // Wait for the dashboard to appear (loading happens too fast to catch with mocked API)
+    await page.waitForSelector('[data-testid="dashboard"]', { timeout: 15000 })
+    
+    // Dashboard should be visible even with API error
+    await expect(page.locator('[data-testid="dashboard"]')).toBeVisible()
     
     // Main structure should be present even with API error
     await expect(page.locator('[data-testid="status-cards"]')).toBeVisible()
     await expect(page.locator('[data-testid="api-endpoints"]')).toBeVisible()
     await expect(page.locator('[data-testid="quick-links"]')).toBeVisible()
     
-    // Page should not crash (dashboard still visible)
-    await expect(page.locator('[data-testid="dashboard"]')).toBeVisible()
-    
-    // Should show 3 status cards even if they show error states
+    // Should show 3 status cards with fallback values
     await expect(page.locator('[data-testid="status-card"]')).toHaveCount(3)
+    
+    // Wait for the API call to complete and fallback values to be rendered
+    await page.waitForFunction(() => {
+      const statusText = document.querySelector('[data-testid="status-cards"]')?.textContent;
+      return statusText?.includes('Unknown') && statusText?.includes('0h 0m 0s') && statusText?.includes('0 MB');
+    }, { timeout: 10000 });
+    
+    // Check that fallback values are displayed when API fails
+    await expect(page.locator('[data-testid="status-cards"]').getByText('Unknown')).toBeVisible() // Status fallback
+    await expect(page.locator('[data-testid="status-cards"]').getByText('0h 0m 0s')).toBeVisible() // Uptime fallback
+    await expect(page.locator('[data-testid="status-cards"]').getByText('0 MB')).toBeVisible() // Memory fallback
+    
+    // Footer should show fallback values too
+    const footer = page.locator('[data-testid="footer"]')
+    await expect(footer).toBeVisible()
+    
+    // Take a screenshot to verify the error state UI
+    await page.screenshot({ path: 'test-results/api-failure-state.png' })
   })
 
   test('all critical navigation and content should be accessible', async ({ page }) => {

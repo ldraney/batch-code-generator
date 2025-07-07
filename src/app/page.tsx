@@ -19,15 +19,32 @@ interface HealthStatus {
 export default function Home() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const checkHealth = async () => {
       try {
         const response = await fetch('/api/health');
-        const data = await response.json();
-        setHealth(data);
+        if (response.ok) {
+          const data = await response.json();
+          // Validate that we got the expected structure
+          if (data && typeof data === 'object' && data.status) {
+            setHealth(data);
+            setError(false);
+          } else {
+            console.error('Invalid health data structure:', data);
+            setHealth(null);
+            setError(true);
+          }
+        } else {
+          console.error('Health check failed with status:', response.status);
+          setHealth(null);
+          setError(true);
+        }
       } catch (error) {
         console.error('Failed to fetch health status:', error);
+        setHealth(null);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -95,7 +112,7 @@ export default function Home() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Uptime</p>
                 <p className="text-2xl font-semibold text-blue-600">
-                  {health ? formatUptime(health.uptime) : '0h 0m 0s'}
+                  {health?.uptime ? formatUptime(health.uptime) : '0h 0m 0s'}
                 </p>
               </div>
               <div className="bg-blue-100 rounded-full p-3">
@@ -111,7 +128,7 @@ export default function Home() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Memory Used</p>
                 <p className="text-2xl font-semibold text-purple-600">
-                  {health ? formatBytes(health.memory.heapUsed) : '0 MB'}
+                  {health?.memory?.heapUsed ? formatBytes(health.memory.heapUsed) : '0 MB'}
                 </p>
               </div>
               <div className="bg-purple-100 rounded-full p-3">
@@ -122,6 +139,18 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Error Banner (only show if there's an error) */}
+        {error && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6" data-testid="error-banner">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="text-yellow-800">Unable to fetch health data. Showing fallback values.</p>
+            </div>
+          </div>
+        )}
 
         {/* API Endpoints */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-12" data-testid="api-endpoints">
@@ -165,8 +194,8 @@ export default function Home() {
 
         {/* Footer */}
         <div className="mt-12 text-center text-gray-500" data-testid="footer">
-          <p>Version: {health?.version} | Environment: {health?.environment}</p>
-          <p className="mt-2">Last updated: {health?.timestamp}</p>
+          <p>Version: {health?.version || 'Unknown'} | Environment: {health?.environment || 'Unknown'}</p>
+          <p className="mt-2">Last updated: {health?.timestamp || 'Never'}</p>
         </div>
       </div>
     </div>
