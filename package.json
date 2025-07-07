@@ -20,7 +20,13 @@
     "test:e2e:ui": "playwright test --ui",
     "test:load": "artillery run tests/load/basic-load.yml",
     "test:all": "npm run test && npm run test:integration && npm run test:e2e",
-    "test:e2e:install": "npx playwright install"
+    "test:e2e:install": "npx playwright install",
+    "test:regression": "./scripts/test-regression.sh",
+    "test:smoke": "jest tests/regression/smoke",
+    "test:contracts": "jest tests/regression/api",
+    "test:performance": "jest tests/regression/performance",
+    "test:visual": "playwright test tests/regression/visual",
+    "capture:baselines": "./scripts/capture-baselines.sh"
   },
   "dependencies": {
     "@sentry/nextjs": "^9.35.0",
@@ -36,13 +42,19 @@
   "devDependencies": {
     "@playwright/test": "^1.53.2",
     "@types/node": "^20",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
+    "lighthouse": "^12.7.1",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
