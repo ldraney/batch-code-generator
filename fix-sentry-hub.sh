@@ -1,3 +1,9 @@
+#!/bin/bash
+
+echo "🔧 Fixing Sentry hub API with modern approach..."
+
+# Fix sentry.ts with completely modern Sentry API
+cat > src/lib/sentry.ts << 'EOF'
 import * as Sentry from '@sentry/nextjs';
 
 // Check if Sentry is properly configured
@@ -245,3 +251,17 @@ export function healthCheck(): { sentry: boolean; message: string } {
     message: 'Sentry initialized and ready'
   };
 }
+EOF
+
+echo "✅ Fixed Sentry hub API!"
+echo ""
+echo "🔧 Changes made:"
+echo "- Removed all deprecated APIs (getCurrentHub, startTransaction)"
+echo "- Simplified to use only stable Sentry APIs"
+echo "- Added measurePerformance utility for timing"
+echo "- Enhanced error capture with better context"
+echo "- Added health check for Sentry status"
+echo "- Focus on breadcrumbs and context over complex spans"
+echo ""
+echo "🚀 Now try:"
+echo "npm run build   # Should be completely clean!"

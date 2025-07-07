@@ -1,3 +1,9 @@
+#!/bin/bash
+
+echo "🔧 Fixing global-error.tsx TypeScript error..."
+
+# Fix the global error handler with proper TypeScript types
+cat > src/app/global-error.tsx << 'EOF'
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
@@ -64,3 +70,15 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
     </html>
   );
 }
+EOF
+
+echo "✅ Fixed global-error.tsx TypeScript error!"
+echo ""
+echo "🔧 Changes made:"
+echo "- Added proper TypeScript interface for props"
+echo "- Fixed reset function typing" 
+echo "- Added error details for debugging"
+echo "- Improved styling and layout"
+echo ""
+echo "🚀 Now try:"
+echo "npm run build   # Should compile successfully!"
