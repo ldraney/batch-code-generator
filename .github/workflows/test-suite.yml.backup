@@ -31,41 +31,10 @@ jobs:
       - name: 🏗️ Build application
         run: npm run build
 
-      # Run tests that don't require a server first
-      - name: 🧪 Run unit tests
-        run: npm run test:unit
-        env:
-          NODE_ENV: test
-          WEBHOOK_SECRET: test-secret-123
-          CI: true
-
-      - name: 🧪 Run smoke tests  
-        run: npm run test:smoke
-        env:
-          NODE_ENV: test
-          WEBHOOK_SECRET: test-secret-123
-          CI: true
-
-      - name: 🧪 Run contract tests
-        run: npm run test:contracts
-        env:
-          NODE_ENV: test
-          WEBHOOK_SECRET: test-secret-123
-          CI: true
-
-      - name: 🧪 Run performance tests
-        run: npm run test:performance
-        env:
-          NODE_ENV: test
-          WEBHOOK_SECRET: test-secret-123
-          CI: true
-
-      # Start server for integration tests
-      - name: 🚀 Start application for integration tests
+      - name: 🚀 Start application for testing
         run: |
           npm start &
-          SERVER_PID=$!
-          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+          sleep 10
         env:
           NODE_ENV: production
           WEBHOOK_SECRET: test-secret-123
@@ -75,28 +44,14 @@ jobs:
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 2; done'
 
-      - name: 🧪 Run integration tests
-        run: npm run test:integration
+      - name: 🧪 Run complete test suite
+        run: npm run test:all:ci
         env:
           TEST_BASE_URL: http://localhost:3000
-          NODE_ENV: test
-          WEBHOOK_SECRET: test-secret-123
           CI: true
 
       - name: 🎭 Install Playwright browsers
         run: npx playwright install chromium
-
-      - name: 🧪 Run visual tests
-        run: npm run test:visual
-        env:
-          CI: true
-
-      - name: 🛑 Stop server
-        if: always()
-        run: |
-          if [ ! -z "$SERVER_PID" ]; then
-            kill $SERVER_PID || true
-          fi
 
       - name: 📸 Upload test artifacts on failure
         uses: actions/upload-artifact@v4
@@ -141,9 +96,7 @@ jobs:
         run: |
           # Start container
           docker run -d -p 3000:3000 \
-            -e NODE_ENV=production \
             -e WEBHOOK_SECRET=test-secret-123 \
-            -e PORT=3000 \
             --name test-container \
             batch-code-generator:test
           
@@ -151,35 +104,27 @@ jobs:
           timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 2; done'
           
           # Test endpoints
-          echo "Testing health endpoint..."
           curl -f http://localhost:3000/api/health
-          
-          echo "Testing metrics endpoint..."
           curl -f http://localhost:3000/api/metrics
-          
-          echo "Testing webhook endpoint..."
           curl -f -X POST http://localhost:3000/api/webhook \
             -H "Content-Type: application/json" \
             -H "x-webhook-signature: test-secret-123" \
             -d '{"event": "code_generation_request", "data": {"type": "component"}, "timestamp": "2025-01-01T00:00:00Z"}'
-
-      - name: 📋 Capture Docker logs
-        if: always()
-        run: |
-          # Capture logs before cleanup
-          docker logs test-container > docker-logs.txt 2>&1 || true
 
       - name: 📋 Upload Docker logs on failure
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: docker-logs-${{ github.run_id }}
-          path: docker-logs.txt
+          path: |
+            docker-logs.txt
           retention-days: 3
 
       - name: 🧹 Cleanup Docker
         if: always()
         run: |
+          # Capture logs before cleanup
+          docker logs test-container > docker-logs.txt 2>&1 || true
           docker stop test-container || true
           docker rm test-container || true
 
@@ -198,3 +143,4 @@ jobs:
           echo "✅ Security audit completed"
           echo ""
           echo "🛫 Ready for Fly.io deployment!"
+
