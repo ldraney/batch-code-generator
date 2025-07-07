@@ -27,7 +27,7 @@
     "test:performance": "jest tests/jest-tests/regression/performance --passWithNoTests",
     "test:visual": "playwright test tests/playwright-tests/visual/component-tests.test.ts",
     "capture:baselines": "./scripts/capture-baselines.sh",
-    "test:unit": "jest src/ --passWithNoTests",
+    "test:unit": "jest src/",
     "test:regression:api": "jest tests/jest-tests/regression",
     "test:ci": "npm run test:unit && npm run test:integration && npm run test:contracts && npm run test:performance && npm run test:smoke",
     "docker:test": "./scripts/test-docker.sh",
