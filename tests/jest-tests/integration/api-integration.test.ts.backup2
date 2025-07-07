@@ -36,7 +36,7 @@ describe('API Integration Tests', () => {
       expect(healthResponse.body.status).toBe('healthy')
 
       // 2. Process webhook
-      const webhookSignature = 'test-secret-123'
+      const webhookSignature = process.env.CI ? 'test-secret-123' : 'dev-secret-123'
       const webhookPayload = {
         event: 'code_generation_request',
         data: {
@@ -69,7 +69,7 @@ describe('API Integration Tests', () => {
         return
       }
 
-      const webhookSignature = 'test-secret-123'
+      const webhookSignature = process.env.CI ? 'test-secret-123' : 'dev-secret-123'
       const batchPayload = {
         event: 'batch_job_request',
         data: {
@@ -117,7 +117,7 @@ describe('API Integration Tests', () => {
         return
       }
 
-      const webhookSignature = 'test-secret-123'
+      const webhookSignature = process.env.CI ? 'test-secret-123' : 'dev-secret-123'
       const invalidPayload = {
         event: 'invalid_event',
         // Missing required fields
@@ -139,7 +139,7 @@ describe('API Integration Tests', () => {
         return
       }
 
-      const webhookSignature = 'test-secret-123'
+      const webhookSignature = process.env.CI ? 'test-secret-123' : 'dev-secret-123'
       const concurrentRequests = 5
 
       const requests = Array.from({ length: concurrentRequests }, (_, i) =>

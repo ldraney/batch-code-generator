@@ -1,12 +1,20 @@
+// Jest setup - standardized for all tests
+console.log('🔧 Setting up TEST environment variables...')
+
+// Use test-secret-123 for ALL tests (unit, integration, smoke, etc.)
+process.env.NODE_ENV = 'test'
+process.env.WEBHOOK_SECRET = 'test-secret-123'  // Consistent for all tests
+process.env.SENTRY_DSN = 'https://fake-dsn@sentry.io/fake-project'
+
+console.log('✅ Test env vars set:', {
+  NODE_ENV: process.env.NODE_ENV,
+  WEBHOOK_SECRET: process.env.WEBHOOK_SECRET
+})
+
 // Only import testing-library for jsdom environment
 if (typeof window !== 'undefined') {
   import('@testing-library/jest-dom')
 }
-
-// Mock environment variables for both local and CI
-process.env.WEBHOOK_SECRET = process.env.CI ? 'test-secret-123' : 'dev-secret-123'
-process.env.NODE_ENV = 'test'
-process.env.SENTRY_DSN = 'https://fake-dsn@sentry.io/fake-project'
 
 // Mock Sentry for all tests
 jest.mock('@sentry/nextjs', () => ({
