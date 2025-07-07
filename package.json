@@ -29,7 +29,11 @@
     "capture:baselines": "./scripts/capture-baselines.sh",
     "test:unit": "jest src/ --passWithNoTests",
     "test:regression:api": "jest tests/jest-tests/regression",
-    "test:ci": "npm run test:unit && npm run test:integration && npm run test:contracts && npm run test:performance && npm run test:smoke"
+    "test:ci": "npm run test:unit && npm run test:integration && npm run test:contracts && npm run test:performance && npm run test:smoke",
+    "docker:test": "./scripts/test-docker.sh",
+    "docker:logs": "docker-compose logs -f",
+    "docker:down": "docker-compose down",
+    "docker:clean": "docker system prune -f && docker volume prune -f"
   },
   "dependencies": {
     "@sentry/nextjs": "^9.35.0",

@@ -8,7 +8,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -47,6 +48,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copy package.json for version info
 COPY --from=builder /app/package.json ./package.json
+
+# Copy healthcheck script
+COPY --from=builder /app/healthcheck.js ./healthcheck.js
 
 USER nextjs
 
