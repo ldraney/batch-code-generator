@@ -8,10 +8,16 @@ if ! curl -s "http://localhost:3000/api/health" > /dev/null; then
 fi
 
 echo "📷 Capturing visual baselines..."
-npm run test:visual -- --update-snapshots
+echo "This will create new baseline screenshots for comparison"
 
-echo "📊 Capturing performance baselines..."
+# Create baselines for visual tests
+npx playwright test tests/playwright-tests/visual --update-snapshots
+
+echo "📊 Running performance baselines..."
 npm run test:regression:api
 
 echo "✅ Baselines captured! Commit these to version control."
 echo "💡 Run 'npm run test:regression' to validate against baselines."
+echo ""
+echo "📁 Screenshot baselines saved to:"
+echo "   tests/playwright-tests/visual/screenshots.test.ts-snapshots/"

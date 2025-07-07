@@ -51,7 +51,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-testid="loading-state">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -61,7 +61,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-testid="dashboard">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -72,8 +72,9 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" data-testid="status-cards">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500" data-testid="status-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Status</p>
@@ -89,7 +90,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500" data-testid="status-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Uptime</p>
@@ -105,7 +106,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500" data-testid="status-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Memory Used</p>
@@ -122,7 +123,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-12">
+        {/* API Endpoints */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-12" data-testid="api-endpoints">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">API Endpoints</h2>
           <div className="space-y-4">
             <div className="border-l-4 border-green-500 pl-4">
@@ -140,7 +142,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        {/* Quick Links */}
+        <div className="bg-white rounded-lg shadow-sm p-6" data-testid="quick-links">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Links</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
@@ -160,7 +163,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-12 text-center text-gray-500">
+        {/* Footer */}
+        <div className="mt-12 text-center text-gray-500" data-testid="footer">
           <p>Version: {health?.version} | Environment: {health?.environment}</p>
           <p className="mt-2">Last updated: {health?.timestamp}</p>
         </div>
