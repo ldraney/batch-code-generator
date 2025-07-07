@@ -11,7 +11,15 @@
     "docker:build": "docker build -t batch-code-generator .",
     "docker:dev": "docker-compose -f docker-compose.dev.yml up",
     "docker:monitoring": "docker-compose -f monitoring/docker-compose.monitoring.yml up",
-    "setup": "chmod +x scripts/setup-dev.sh && ./scripts/setup-dev.sh"
+    "setup": "chmod +x scripts/setup-dev.sh && ./scripts/setup-dev.sh",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:load": "artillery run tests/load/basic-load.yml",
+    "test:all": "npm run test && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
     "@sentry/nextjs": "^7.99.0",
