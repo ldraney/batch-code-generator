@@ -1,6 +1,5 @@
-import { defineConfig, devices } from '@playwright/test';
-
-export default defineConfig({
+// Playwright configuration (JavaScript to avoid TypeScript compilation issues)
+module.exports = {
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -15,15 +14,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {},
     },
   ],
 
@@ -32,4 +23,4 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
-});
+};

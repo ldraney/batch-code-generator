@@ -9,9 +9,12 @@ if (SENTRY_DSN) {
     // Performance monitoring
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
     
+    // Environment setup
+    environment: process.env.NODE_ENV || 'development',
+    release: process.env.VERCEL_GIT_COMMIT_SHA || 'dev',
+    
     // Enhanced error context
     beforeSend(event, hint) {
-      // Add custom context for better debugging
       if (event.exception) {
         event.tags = {
           ...event.tags,
@@ -20,10 +23,6 @@ if (SENTRY_DSN) {
       }
       return event;
     },
-    
-    // Environment setup
-    environment: process.env.NODE_ENV || 'development',
-    release: process.env.VERCEL_GIT_COMMIT_SHA || 'dev',
     
     // Debug in development
     debug: process.env.NODE_ENV === 'development',
