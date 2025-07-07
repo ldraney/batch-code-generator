@@ -6,7 +6,14 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Batch Code Generator',
-  description: 'Generate code in batches via webhook',
+  description: 'Generate code in batches via webhook with comprehensive monitoring',
+  keywords: ['code generation', 'webhooks', 'monitoring', 'batch processing'],
+  authors: [{ name: 'Your Name' }],
+  openGraph: {
+    title: 'Batch Code Generator',
+    description: 'Generate code in batches via webhook with comprehensive monitoring',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

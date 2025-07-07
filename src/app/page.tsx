@@ -19,15 +19,32 @@ interface HealthStatus {
 export default function Home() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const checkHealth = async () => {
       try {
         const response = await fetch('/api/health');
-        const data = await response.json();
-        setHealth(data);
+        if (response.ok) {
+          const data = await response.json();
+          // Validate that we got the expected structure
+          if (data && typeof data === 'object' && data.status) {
+            setHealth(data);
+            setError(false);
+          } else {
+            console.error('Invalid health data structure:', data);
+            setHealth(null);
+            setError(true);
+          }
+        } else {
+          console.error('Health check failed with status:', response.status);
+          setHealth(null);
+          setError(true);
+        }
       } catch (error) {
         console.error('Failed to fetch health status:', error);
+        setHealth(null);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -51,7 +68,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-testid="loading-state">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -61,7 +78,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-testid="dashboard">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -72,8 +89,9 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" data-testid="status-cards">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500" data-testid="status-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Status</p>
@@ -89,12 +107,12 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500" data-testid="status-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Uptime</p>
                 <p className="text-2xl font-semibold text-blue-600">
-                  {health ? formatUptime(health.uptime) : '0h 0m 0s'}
+                  {health?.uptime ? formatUptime(health.uptime) : '0h 0m 0s'}
                 </p>
               </div>
               <div className="bg-blue-100 rounded-full p-3">
@@ -105,12 +123,12 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500" data-testid="status-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Memory Used</p>
                 <p className="text-2xl font-semibold text-purple-600">
-                  {health ? formatBytes(health.memory.heapUsed) : '0 MB'}
+                  {health?.memory?.heapUsed ? formatBytes(health.memory.heapUsed) : '0 MB'}
                 </p>
               </div>
               <div className="bg-purple-100 rounded-full p-3">
@@ -122,7 +140,20 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-12">
+        {/* Error Banner (only show if there's an error) */}
+        {error && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6" data-testid="error-banner">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="text-yellow-800">Unable to fetch health data. Showing fallback values.</p>
+            </div>
+          </div>
+        )}
+
+        {/* API Endpoints */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-12" data-testid="api-endpoints">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">API Endpoints</h2>
           <div className="space-y-4">
             <div className="border-l-4 border-green-500 pl-4">
@@ -140,7 +171,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        {/* Quick Links */}
+        <div className="bg-white rounded-lg shadow-sm p-6" data-testid="quick-links">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Links</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
@@ -160,9 +192,10 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-12 text-center text-gray-500">
-          <p>Version: {health?.version} | Environment: {health?.environment}</p>
-          <p className="mt-2">Last updated: {health?.timestamp}</p>
+        {/* Footer */}
+        <div className="mt-12 text-center text-gray-500" data-testid="footer">
+          <p>Version: {health?.version || 'Unknown'} | Environment: {health?.environment || 'Unknown'}</p>
+          <p className="mt-2">Last updated: {health?.timestamp || 'Never'}</p>
         </div>
       </div>
     </div>

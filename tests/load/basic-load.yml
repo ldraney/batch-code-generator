@@ -1,0 +1,47 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp up load"
+    - duration: 300
+      arrivalRate: 20
+      name: "Sustained load"
+  processor: "./load-test-functions.js"
+
+scenarios:
+  - name: "Health Check Load"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/health"
+          capture:
+            - json: "$.status"
+              as: "health_status"
+      - think: 1
+
+  - name: "Metrics Load"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/metrics"
+      - think: 2
+
+  - name: "Webhook Load"
+    weight: 50
+    flow:
+      - post:
+          url: "/api/webhook"
+          headers:
+            Content-Type: "application/json"
+            x-webhook-signature: "test-secret-123"
+          json:
+            event: "code_generation_request"
+            data:
+              type: "{{ $randomString() }}"
+              language: "typescript"
+            timestamp: "{{ $timestamp() }}"
+      - think: 1

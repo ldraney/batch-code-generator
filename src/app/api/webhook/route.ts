@@ -1,8 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { recordWebhookRequest, recordCodeGeneration, incrementActiveJobs, decrementActiveJobs, recordError } from '@/lib/metrics';
-import { captureWebhookError } from '@/lib/sentry';
 
+// Import metrics with error handling
+let recordWebhookRequest: any, recordCodeGeneration: any, incrementActiveJobs: any, decrementActiveJobs: any, recordError: any;
+try {
+  const metrics = require('@/lib/metrics');
+  recordWebhookRequest = metrics.recordWebhookRequest;
+  recordCodeGeneration = metrics.recordCodeGeneration;
+  incrementActiveJobs = metrics.incrementActiveJobs;
+  decrementActiveJobs = metrics.decrementActiveJobs;
+  recordError = metrics.recordError;
+} catch (error) {
+  console.warn('Metrics module not available:', error);
+  // Provide fallback functions
+  recordWebhookRequest = () => {};
+  recordCodeGeneration = () => {};
+  incrementActiveJobs = () => {};
+  decrementActiveJobs = () => {};
+  recordError = () => {};
+}
+
+// Import Sentry with error handling
+let captureWebhookError: any;
+try {
+  const sentry = require('@/lib/sentry');
+  captureWebhookError = sentry.captureWebhookError;
+} catch (error) {
+  console.warn('Sentry module not available:', error);
+  captureWebhookError = (error: Error, context: any) => {
+    console.error('Webhook error:', error, context);
+  };
+}
+
+// Webhook payload schema
 const WebhookPayloadSchema = z.object({
   event: z.string(),
   data: z.object({
@@ -21,25 +51,46 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
+    console.log('📨 Webhook POST request received');
+    
+    // Verify webhook secret
     const signature = request.headers.get('x-webhook-signature');
-    if (!signature || !verifyWebhookSignature(signature, request.body)) {
+    const expectedSignature = process.env.WEBHOOK_SECRET || 'dev-secret-123';
+    
+    console.log('🔐 Signature check:', { 
+      received: signature, 
+      expected: expectedSignature,
+      match: signature === expectedSignature 
+    });
+    
+    if (!signature || signature !== expectedSignature) {
+      console.log('❌ Invalid signature');
       recordWebhookRequest('POST', '401', '/api/webhook');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
+    // Parse and validate payload
     const body = await request.json();
+    console.log('📋 Payload received:', body);
+    
     const payload = WebhookPayloadSchema.parse(body);
+    console.log('✅ Payload validation passed');
+
+    // Handle different webhook events
     const result = await handleWebhookEvent(payload);
     
     recordWebhookRequest('POST', '200', '/api/webhook');
     recordCodeGeneration(payload.data.type, true, (Date.now() - startTime) / 1000);
     
+    console.log('✅ Webhook processed successfully:', result);
     return NextResponse.json(result, { status: 200 });
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
-    console.error('Webhook error:', error);
+    console.error('❌ Webhook error:', error);
+    
+    // Log error and capture in Sentry
     captureWebhookError(error as Error, { request: request.url });
     
     recordWebhookRequest('POST', '500', '/api/webhook');
@@ -56,6 +107,8 @@ async function handleWebhookEvent(payload: WebhookPayload) {
   incrementActiveJobs();
   
   try {
+    console.log(`🔄 Handling event: ${payload.event}`);
+    
     switch (payload.event) {
       case 'code_generation_request':
         return await handleCodeGenerationRequest(payload.data);
@@ -70,6 +123,9 @@ async function handleWebhookEvent(payload: WebhookPayload) {
 }
 
 async function handleCodeGenerationRequest(data: WebhookPayload['data']) {
+  console.log('🎨 Processing code generation request:', data);
+  
+  // Simulate code generation logic
   await new Promise(resolve => setTimeout(resolve, 100));
   
   return {
@@ -82,6 +138,9 @@ async function handleCodeGenerationRequest(data: WebhookPayload['data']) {
 }
 
 async function handleBatchJobRequest(data: WebhookPayload['data']) {
+  console.log('📦 Processing batch job request:', data);
+  
+  // Simulate batch job processing
   await new Promise(resolve => setTimeout(resolve, 500));
   
   return {
@@ -90,11 +149,6 @@ async function handleBatchJobRequest(data: WebhookPayload['data']) {
     batch_id: data.batch_id || `batch_${Date.now()}`,
     estimated_completion: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
   };
-}
-
-function verifyWebhookSignature(signature: string, body: any): boolean {
-  const expectedSignature = process.env.WEBHOOK_SECRET;
-  return signature === expectedSignature;
 }
 
 export async function GET() {
