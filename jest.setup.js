@@ -1,10 +1,13 @@
-import '@testing-library/jest-dom'
+// Only import testing-library for jsdom environment
+if (typeof window !== 'undefined') {
+  import('@testing-library/jest-dom')
+}
 
 // Mock environment variables
 process.env.WEBHOOK_SECRET = 'test-secret-123'
 process.env.NODE_ENV = 'test'
 
-// Mock Sentry
+// Mock Sentry for all tests
 jest.mock('@sentry/nextjs', () => ({
   init: jest.fn(),
   captureException: jest.fn(),
@@ -15,20 +18,28 @@ jest.mock('@sentry/nextjs', () => ({
     setLevel: jest.fn(),
   })),
   addBreadcrumb: jest.fn(),
-  startTransaction: jest.fn(() => ({
-    setTag: jest.fn(),
-    setStatus: jest.fn(),
-    finish: jest.fn(),
+  getCurrentHub: jest.fn(() => ({
+    getScope: jest.fn(() => ({
+      getSpan: jest.fn(),
+    })),
   })),
 }))
 
-// Mock fetch for API tests
-global.fetch = jest.fn()
+// Mock fetch for Node.js tests
+if (typeof fetch === 'undefined') {
+  global.fetch = jest.fn()
+}
 
-// Console spy to reduce noise in tests
+// Reduce console noise in tests
+const originalConsole = global.console
 global.console = {
   ...console,
   log: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+}
+
+// Restore console for debugging when needed
+if (process.env.DEBUG_TESTS) {
+  global.console = originalConsole
 }

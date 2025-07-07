@@ -9,7 +9,7 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapping: {
-    // Handle module aliases (this will be automatically configured for you based on your tsconfig.json paths)
+    // Handle module aliases
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'jest-environment-jsdom',
@@ -30,6 +30,28 @@ const customJestConfig = {
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
     '<rootDir>/tests/**/*.{test,spec}.{js,jsx,ts,tsx}',
+  ],
+  // Handle supertest and other Node.js modules
+  testEnvironment: 'node',
+  // Override for specific test types
+  projects: [
+    {
+      displayName: 'node',
+      testEnvironment: 'node',
+      testMatch: [
+        '<rootDir>/tests/**/*.{test,spec}.{js,jsx,ts,tsx}',
+        '<rootDir>/src/app/api/**/*.{test,spec}.{js,jsx,ts,tsx}',
+        '<rootDir>/src/lib/**/*.{test,spec}.{js,jsx,ts,tsx}',
+      ],
+    },
+    {
+      displayName: 'jsdom',
+      testEnvironment: 'jsdom',
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      testMatch: [
+        '<rootDir>/src/components/**/*.{test,spec}.{js,jsx,ts,tsx}',
+      ],
+    },
   ],
 }
 

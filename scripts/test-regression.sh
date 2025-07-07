@@ -19,22 +19,22 @@ fi
 
 echo "✅ Server is responding"
 
-# Run different test suites
+# Run different test suites using npm run
 echo ""
 echo "📋 Running API Contract Tests..."
-npm run test -- tests/regression/api
+npm run test:contracts
 
 echo ""
 echo "⚡ Running Performance Tests..."
-npm run test -- tests/regression/performance
+npm run test:performance
 
 echo ""
 echo "💨 Running Smoke Tests..."
-npm run test -- tests/regression/smoke
+npm run test:smoke
 
 echo ""
 echo "👁️ Running Visual Regression Tests..."
-npm run test:e2e -- tests/regression/visual
+npm run test:visual
 
 echo ""
 echo "🎉 All regression tests completed!"
