@@ -29,7 +29,8 @@
     "capture:baselines": "./scripts/capture-baselines.sh",
     "test:unit": "jest src/",
     "test:regression:api": "jest tests/jest-tests/regression",
-    "test:all:ci": "npm run test -- --passWithNoTests && npm run test:integration && npm run test:contracts && npm run test:performance && npm run test:smoke && npm run test:visual"
+    "test:all:ci": "npm run test -- --passWithNoTests && npm run test:integration && npm run test:contracts && npm run test:performance && npm run test:smoke && npm run test:visual",
+    "test:ci": "npm run test:unit && npm run test:integration && npm run test:contracts && npm run test:performance && npm run test:smoke"
   },
   "dependencies": {
     "@sentry/nextjs": "^9.35.0",

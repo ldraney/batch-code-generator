@@ -86,7 +86,7 @@ describe('API Integration Tests', () => {
         .expect(200)
 
       expect(response.body.success).toBe(true)
-      expect(response.body.batch_id).toBeDefined()
+      expect(response.body.batch_id).toMatch(/^batch_\d+$/)
       expect(response.body.estimated_completion).toBeDefined()
     })
 

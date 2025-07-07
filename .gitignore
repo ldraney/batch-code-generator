@@ -127,3 +127,4 @@ test.env
 **/*-snapshots/
 **/screenshots.test.ts-snapshots/
 
+test-diagnostics/

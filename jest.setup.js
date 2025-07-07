@@ -3,9 +3,10 @@ if (typeof window !== 'undefined') {
   import('@testing-library/jest-dom')
 }
 
-// Mock environment variables
-process.env.WEBHOOK_SECRET = 'test-secret-123'
+// Mock environment variables for both local and CI
+process.env.WEBHOOK_SECRET = process.env.CI ? 'test-secret-123' : 'dev-secret-123'
 process.env.NODE_ENV = 'test'
+process.env.SENTRY_DSN = 'https://fake-dsn@sentry.io/fake-project'
 
 // Mock Sentry for all tests
 jest.mock('@sentry/nextjs', () => ({
@@ -30,16 +31,13 @@ if (typeof fetch === 'undefined') {
   global.fetch = jest.fn()
 }
 
-// Reduce console noise in tests
-const originalConsole = global.console
-global.console = {
-  ...console,
-  log: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-}
-
-// Restore console for debugging when needed
-if (process.env.DEBUG_TESTS) {
-  global.console = originalConsole
+// Reduce console noise in tests unless debugging
+if (!process.env.DEBUG_TESTS) {
+  const originalConsole = global.console
+  global.console = {
+    ...console,
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }
 }
