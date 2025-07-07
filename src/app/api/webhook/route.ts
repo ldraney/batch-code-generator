@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BatchCodeProcessor } from '@/lib/batch-code-processor';
 import { MondayWebhookSchema } from '@/lib/monday';
+import { MondayClient } from '@/lib/monday';
+
+const monday = new MondayClient(process.env.MONDAY_API_KEY!);
+
 
 // Import metrics with error handling
 let recordWebhookRequest: any, recordError: any;
@@ -41,12 +45,6 @@ export async function POST(request: NextRequest) {
       throw new Error('Missing required environment variables');
     }
 
-    // Verify webhook signature (if using Monday.com webhook secrets)
-    if (webhookSecret) {
-      const signature = request.headers.get('x-monday-signature-256');
-      // Add signature verification logic here if needed
-    }
-
     // Parse and validate payload
     const body = await request.json();
     console.log('📋 Webhook payload:', JSON.stringify(body, null, 2));
@@ -56,6 +54,7 @@ export async function POST(request: NextRequest) {
     // Process the webhook
     const processor = new BatchCodeProcessor(mondayApiKey, batchCodeColumnId);
     await processor.initialize();
+
     const result = await processor.processWebhook(payload);
 
     recordWebhookRequest('POST', '200', '/api/webhook');

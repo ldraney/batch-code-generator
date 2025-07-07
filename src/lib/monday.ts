@@ -1,10 +1,26 @@
 import { z } from 'zod';
 
-// Monday.com webhook payload schemas
+// Monday.com webhook payload schemas - UPDATED to match real Monday.com webhooks
 export const MondayWebhookSchema = z.object({
   challenge: z.string().optional(), // For webhook verification
   event: z.object({
-    type: z.enum(['create_item', 'update_item']),
+    app: z.string().optional(),
+    type: z.enum(['create_pulse', 'update_pulse', 'create_item', 'update_item']), // Monday uses "pulse" terminology
+    triggerTime: z.string().optional(),
+    subscriptionId: z.number().optional(),
+    isRetry: z.boolean().optional(),
+    userId: z.number().optional(),
+    originalTriggerUuid: z.string().nullable().optional(),
+    boardId: z.number().optional(),
+    pulseId: z.number().optional(),        // Monday calls items "pulses"
+    pulseName: z.string().optional(),      // Item name
+    groupId: z.string().optional(),
+    groupName: z.string().optional(),
+    groupColor: z.string().optional(),
+    isTopGroup: z.boolean().optional(),
+    columnValues: z.record(z.any()).optional(),
+    triggerUuid: z.string().optional(),
+    // Legacy data structure support
     data: z.object({
       item_id: z.string(),
       board_id: z.string(),
@@ -15,13 +31,49 @@ export const MondayWebhookSchema = z.object({
         value: z.any(),
         text: z.string().optional()
       })).optional()
-    })
+    }).optional()
   }).optional()
 });
 
 export type MondayWebhookPayload = z.infer<typeof MondayWebhookSchema>;
 
-// Monday.com API client
+// Helper function to normalize Monday.com webhook data
+export function normalizeMondayWebhook(payload: MondayWebhookPayload) {
+  if (!payload.event) return null;
+
+  const { event } = payload;
+  
+  // Handle both old and new Monday.com webhook formats
+  if (event.type === 'create_pulse' || event.type === 'create_item') {
+    return {
+      type: 'create_item',
+      data: {
+        item_id: event.data?.item_id || String(event.pulseId),
+        item_name: event.data?.item_name || event.pulseName || 'Unknown Item',
+        board_id: event.data?.board_id || String(event.boardId),
+        group_id: event.data?.group_id || event.groupId || 'unknown',
+        column_values: event.data?.column_values || []
+      }
+    };
+  }
+  
+  if (event.type === 'update_pulse' || event.type === 'update_item') {
+    return {
+      type: 'update_item',
+      data: {
+        item_id: event.data?.item_id || String(event.pulseId),
+        item_name: event.data?.item_name || event.pulseName || 'Unknown Item',
+        board_id: event.data?.board_id || String(event.boardId),
+        group_id: event.data?.group_id || event.groupId || 'unknown',
+        column_values: event.data?.column_values || []
+      }
+    };
+  }
+  
+  return null;
+}
+
+// Monday.com API client (unchanged)
 export class MondayClient {
   private apiKey: string;
   private baseUrl = 'https://api.monday.com/v2';
@@ -63,14 +115,19 @@ export class MondayClient {
   /**
    * Update an item's column value (e.g., batch code column)
    */
+/**
+ * Update an item's column value (e.g., batch code column)
+ */
   async updateItemColumn(
-    itemId: string, 
-    columnId: string, 
+    boardId: string,
+    itemId: string,
+    columnId: string,
     value: string
   ): Promise<void> {
     const query = `
-      mutation ($itemId: ID!, $columnId: String!, $value: JSON!) {
+      mutation ($boardId: ID!, $itemId: ID!, $columnId: String!, $value: JSON!) {
         change_column_value (
+          board_id: $boardId,
           item_id: $itemId,
           column_id: $columnId,
           value: $value
@@ -80,10 +137,15 @@ export class MondayClient {
       }
     `;
 
+    // Always wrap text values in JSON string for text columns:
+    // If value is already JSON, do not double stringify.
+    const payloadValue = JSON.stringify(value);
+
     await this.executeQuery(query, {
+      boardId,
       itemId,
       columnId,
-      value: JSON.stringify(value)
+      value: payloadValue,
     });
   }
 
