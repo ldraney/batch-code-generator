@@ -4,7 +4,6 @@ set -e
 
 echo "🧪 Running Regression Test Suite..."
 
-# Environment variables
 export NODE_ENV=test
 export TEST_BASE_URL=${TEST_BASE_URL:-http://localhost:3000}
 
@@ -19,22 +18,17 @@ fi
 
 echo "✅ Server is responding"
 
-# Run different test suites using npm run
 echo ""
-echo "📋 Running API Contract Tests..."
-npm run test:contracts
+echo "📋 Running Jest-based regression tests..."
+npm run test:regression:api
 
 echo ""
-echo "⚡ Running Performance Tests..."
-npm run test:performance
-
-echo ""
-echo "💨 Running Smoke Tests..."
-npm run test:smoke
-
-echo ""
-echo "👁️ Running Visual Regression Tests..."
+echo "👁️ Running Playwright-based visual tests..."
 npm run test:visual
+
+echo ""
+echo "🎭 Running E2E tests..."
+npm run test:e2e
 
 echo ""
 echo "🎉 All regression tests completed!"

@@ -1,6 +1,5 @@
-// Playwright configuration (JavaScript to avoid TypeScript compilation issues)
 module.exports = {
-  testDir: './tests/e2e',
+  testDir: './tests/playwright-tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -23,4 +22,4 @@ module.exports = {
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
-};
+}
