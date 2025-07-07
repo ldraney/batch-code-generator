@@ -1,18 +1,31 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Output for better Docker builds and Fly.io
+  output: 'standalone',
+  
+  // Experimental features
   experimental: {
     serverComponentsExternalPackages: ['prom-client'],
+    instrumentationHook: true,
   },
-  // Ensure API routes work properly with monitoring
+  
+  // API route optimization
   async rewrites() {
     return [
       {
         source: '/metrics',
         destination: '/api/metrics',
       },
+      {
+        source: '/health',
+        destination: '/api/health',
+      },
     ];
   },
-  // Health check for load balancers
+  
+  // Headers for monitoring and health checks
   async headers() {
     return [
       {
@@ -22,38 +35,65 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'no-store, max-age=0',
           },
+          {
+            key: 'X-Health-Check',
+            value: 'true',
+          },
+        ],
+      },
+      {
+        source: '/api/metrics',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
+          },
         ],
       },
     ];
   },
+  
+  // Webpack optimization for metrics
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('prom-client');
+    }
+    return config;
+  },
 };
 
-// Only apply Sentry config if we're in production AND have all Sentry env vars
-const shouldUseSentry = process.env.NODE_ENV === 'production' 
-  && process.env.SENTRY_DSN 
-  && process.env.SENTRY_ORG 
-  && process.env.SENTRY_PROJECT;
-
-if (shouldUseSentry) {
-  const { withSentryConfig } = require('@sentry/nextjs');
+// Sentry configuration
+const sentryWebpackPluginOptions = {
+  // Suppress all Sentry CLI logs
+  silent: true,
   
-  const sentryWebpackPluginOptions = {
-    // Silence Sentry build warnings
-    silent: true,
-    
-    // Hide source maps in production
-    hideSourceMaps: true,
-    
-    // Organization and project
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-    
-    // Auth token for uploads
-    authToken: process.env.SENTRY_AUTH_TOKEN,
-  };
+  // Hide source maps from public
+  hideSourceMaps: true,
+  
+  // Disable dry run for proper source map uploads
+  dryRun: false,
+  
+  // Automatically tree-shake Sentry logger statements
+  disableLogger: true,
+  
+  // Upload source maps for better error tracking
+  widenClientFileUpload: true,
+  
+  // Transpile SDK to work with older browsers
+  transpileClientSDK: true,
+  
+  // Route browser requests through tunneling
+  tunnelRoute: '/monitoring/sentry',
+  
+  // Organization and project from environment
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  
+  // Auth token for uploads
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+};
 
-  module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
-} else {
-  console.log('Sentry disabled - running without error tracking');
-  module.exports = nextConfig;
-}
+// Only apply Sentry config if DSN is provided
+module.exports = process.env.SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;

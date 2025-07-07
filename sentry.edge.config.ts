@@ -1,20 +1,30 @@
 import * as Sentry from '@sentry/nextjs';
 
-// Only initialize if DSN is provided
-if (process.env.SENTRY_DSN) {
+const SENTRY_DSN = process.env.SENTRY_DSN;
+
+if (SENTRY_DSN) {
   Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of the transactions for performance monitoring.
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-
-    // Debug should be false in production
-    debug: process.env.NODE_ENV === 'development',
-
-    // Environment
+    dsn: SENTRY_DSN,
+    
+    // Performance monitoring (lighter for edge)
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.05 : 1.0,
+    
+    // Environment setup
     environment: process.env.NODE_ENV || 'development',
+    release: process.env.VERCEL_GIT_COMMIT_SHA || process.env.FLY_ALLOC_ID || 'dev',
+    
+    // Edge-specific context
+    beforeSend(event, hint) {
+      if (event.exception) {
+        event.tags = {
+          ...event.tags,
+          component: 'edge',
+        };
+      }
+      return event;
+    },
+    
+    // Debug in development
+    debug: process.env.NODE_ENV === 'development',
   });
-} else {
-  console.log('Sentry edge: DSN not provided, skipping initialization');
 }
