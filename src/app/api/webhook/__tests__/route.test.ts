@@ -1,13 +1,18 @@
 import { GET, POST } from '../route'
 import { NextRequest } from 'next/server'
 
-// Mock metrics
-jest.mock('@/lib/metrics', () => ({
+// Mock the metrics module at the correct path
+jest.mock('../../../../lib/metrics', () => ({
   recordWebhookRequest: jest.fn(),
   recordCodeGeneration: jest.fn(),
   incrementActiveJobs: jest.fn(),
   decrementActiveJobs: jest.fn(),
   recordError: jest.fn(),
+}))
+
+// Mock Sentry
+jest.mock('../../../../lib/sentry', () => ({
+  captureWebhookError: jest.fn(),
 }))
 
 describe('/api/webhook', () => {
@@ -92,10 +97,10 @@ describe('/api/webhook', () => {
       expect(response.status).toBe(401)
     })
 
-    it('should reject invalid payload', async () => {
+    it('should handle invalid payload gracefully', async () => {
       const payload = {
         event: 'invalid_event',
-        // missing required data
+        // missing required data field
         timestamp: new Date().toISOString(),
       }
 
