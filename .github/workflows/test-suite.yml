@@ -54,22 +54,24 @@ jobs:
         run: npx playwright install chromium
 
       - name: 📸 Upload test artifacts on failure
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: test-results-${{ matrix.node-version }}
+          name: test-results-${{ matrix.node-version }}-${{ github.run_id }}
           path: |
             test-results/
             playwright-report/
             coverage/
           retention-days: 7
+          compression-level: 6
 
       - name: 📊 Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: matrix.node-version == '20.x'
         with:
           file: ./coverage/lcov.info
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: 🔐 Security audit
         run: npm audit --audit-level high
@@ -109,9 +111,20 @@ jobs:
             -H "x-webhook-signature: test-secret-123" \
             -d '{"event": "code_generation_request", "data": {"type": "component"}, "timestamp": "2025-01-01T00:00:00Z"}'
 
+      - name: 📋 Upload Docker logs on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: docker-logs-${{ github.run_id }}
+          path: |
+            docker-logs.txt
+          retention-days: 3
+
       - name: 🧹 Cleanup Docker
         if: always()
         run: |
+          # Capture logs before cleanup
+          docker logs test-container > docker-logs.txt 2>&1 || true
           docker stop test-container || true
           docker rm test-container || true
 
