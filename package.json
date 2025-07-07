@@ -1,0 +1,43 @@
+{
+  "name": "batch-code-generator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "docker:build": "docker build -t batch-code-generator .",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "docker:monitoring": "docker-compose -f monitoring/docker-compose.monitoring.yml up",
+    "setup": "chmod +x scripts/setup-dev.sh && ./scripts/setup-dev.sh"
+  },
+  "dependencies": {
+    "next": "14.0.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "@sentry/nextjs": "^7.99.0",
+    "prom-client": "^15.1.0",
+    "zod": "^3.22.4",
+    "date-fns": "^3.0.6",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
