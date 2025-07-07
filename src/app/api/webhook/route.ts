@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import { BatchCodeProcessor } from '@/lib/batch-code-processor';
+import { MondayWebhookSchema } from '@/lib/monday';
 
 // Import metrics with error handling
-let recordWebhookRequest: any, recordCodeGeneration: any, incrementActiveJobs: any, decrementActiveJobs: any, recordError: any;
+let recordWebhookRequest: any, recordError: any;
 try {
   const metrics = require('@/lib/metrics');
   recordWebhookRequest = metrics.recordWebhookRequest;
-  recordCodeGeneration = metrics.recordCodeGeneration;
-  incrementActiveJobs = metrics.incrementActiveJobs;
-  decrementActiveJobs = metrics.decrementActiveJobs;
   recordError = metrics.recordError;
 } catch (error) {
   console.warn('Metrics module not available:', error);
-  // Provide fallback functions
   recordWebhookRequest = () => {};
-  recordCodeGeneration = () => {};
-  incrementActiveJobs = () => {};
-  decrementActiveJobs = () => {};
   recordError = () => {};
 }
 
@@ -32,130 +26,72 @@ try {
   };
 }
 
-// Webhook payload schema
-const WebhookPayloadSchema = z.object({
-  event: z.string(),
-  data: z.object({
-    type: z.string(),
-    content: z.string().optional(),
-    language: z.string().optional(),
-    template: z.string().optional(),
-    batch_id: z.string().optional(),
-  }),
-  timestamp: z.string(),
-});
-
-type WebhookPayload = z.infer<typeof WebhookPayloadSchema>;
-
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
-    console.log('📨 Webhook POST request received');
-    
-    // Verify webhook secret
-    const signature = request.headers.get('x-webhook-signature');
-    const expectedSignature = process.env.WEBHOOK_SECRET || 'dev-secret-123';
-    
-    console.log('🔐 Signature check:', { 
-      received: signature, 
-      expected: expectedSignature,
-      match: signature === expectedSignature 
-    });
-    
-    if (!signature || signature !== expectedSignature) {
-      console.log('❌ Invalid signature');
-      recordWebhookRequest('POST', '401', '/api/webhook');
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    console.log('📨 Monday.com webhook received');
+
+    // Get environment variables
+    const mondayApiKey = process.env.MONDAY_API_KEY;
+    const batchCodeColumnId = process.env.MONDAY_BATCH_CODE_COLUMN_ID;
+    const webhookSecret = process.env.MONDAY_WEBHOOK_SECRET;
+
+    if (!mondayApiKey || !batchCodeColumnId) {
+      throw new Error('Missing required environment variables');
+    }
+
+    // Verify webhook signature (if using Monday.com webhook secrets)
+    if (webhookSecret) {
+      const signature = request.headers.get('x-monday-signature-256');
+      // Add signature verification logic here if needed
     }
 
     // Parse and validate payload
     const body = await request.json();
-    console.log('📋 Payload received:', body);
-    
-    const payload = WebhookPayloadSchema.parse(body);
-    console.log('✅ Payload validation passed');
+    console.log('📋 Webhook payload:', JSON.stringify(body, null, 2));
 
-    // Handle different webhook events
-    const result = await handleWebhookEvent(payload);
-    
+    const payload = MondayWebhookSchema.parse(body);
+
+    // Process the webhook
+    const processor = new BatchCodeProcessor(mondayApiKey, batchCodeColumnId);
+    await processor.initialize();
+    const result = await processor.processWebhook(payload);
+
     recordWebhookRequest('POST', '200', '/api/webhook');
-    recordCodeGeneration(payload.data.type, true, (Date.now() - startTime) / 1000);
-    
+
     console.log('✅ Webhook processed successfully:', result);
     return NextResponse.json(result, { status: 200 });
-    
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    console.error('❌ Webhook error:', error);
-    
-    // Log error and capture in Sentry
-    captureWebhookError(error as Error, { request: request.url });
-    
+    console.error('❌ Webhook processing error:', error);
+
+    captureWebhookError(error as Error, { 
+      url: request.url,
+      timestamp: new Date().toISOString() 
+    });
+
     recordWebhookRequest('POST', '500', '/api/webhook');
-    recordError(error instanceof z.ZodError ? 'validation' : 'processing');
-    
+    recordError('webhook_processing');
+
     return NextResponse.json(
-      { error: errorMessage },
+      { 
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
 }
 
-async function handleWebhookEvent(payload: WebhookPayload) {
-  incrementActiveJobs();
-  
-  try {
-    console.log(`🔄 Handling event: ${payload.event}`);
-    
-    switch (payload.event) {
-      case 'code_generation_request':
-        return await handleCodeGenerationRequest(payload.data);
-      case 'batch_job_request':
-        return await handleBatchJobRequest(payload.data);
-      default:
-        throw new Error(`Unknown event type: ${payload.event}`);
-    }
-  } finally {
-    decrementActiveJobs();
-  }
-}
-
-async function handleCodeGenerationRequest(data: WebhookPayload['data']) {
-  console.log('🎨 Processing code generation request:', data);
-  
-  // Simulate code generation logic
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  return {
-    success: true,
-    message: 'Code generation started',
-    job_id: `gen_${Date.now()}`,
-    type: data.type,
-    language: data.language || 'javascript',
-  };
-}
-
-async function handleBatchJobRequest(data: WebhookPayload['data']) {
-  console.log('📦 Processing batch job request:', data);
-  
-  // Simulate batch job processing
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return {
-    success: true,
-    message: 'Batch job queued',
-    batch_id: data.batch_id || `batch_${Date.now()}`,
-    estimated_completion: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-  };
-}
-
+// Keep the existing GET method for testing
 export async function GET() {
   return NextResponse.json(
-    { 
-      message: 'Webhook endpoint is active',
-      supportedEvents: ['code_generation_request', 'batch_job_request'],
+    {
+      message: 'Monday.com Batch Code Generator webhook endpoint',
+      supportedEvents: ['create_item'],
+      status: 'active',
       timestamp: new Date().toISOString(),
     },
     { status: 200 }
