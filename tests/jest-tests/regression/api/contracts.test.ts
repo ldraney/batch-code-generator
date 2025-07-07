@@ -42,11 +42,16 @@ describe('API Contract Regression Tests', () => {
   const baseURL = process.env.TEST_BASE_URL || 'http://localhost:3000'
   let serverRunning = false
   
+  // Use different webhook signatures for different environments
+  const webhookSignature = process.env.CI ? 'test-secret-123' : 'dev-secret-123'
+  
   beforeAll(async () => {
     // Check if server is running
     try {
       await request(baseURL).get('/api/health').timeout(2000)
       serverRunning = true
+      console.log(`✅ Server running at ${baseURL}`)
+      console.log(`🔐 Using webhook signature: ${webhookSignature}`)
     } catch (error) {
       console.warn('⚠️  Server not running - skipping contract tests')
       console.warn('💡 Start server with "npm run dev" to run these tests')
@@ -154,9 +159,11 @@ describe('API Contract Regression Tests', () => {
         timestamp: new Date().toISOString()
       }
 
+      console.log(`🔐 Testing webhook with signature: ${webhookSignature}`)
+
       const response = await request(baseURL)
         .post('/api/webhook')
-        .set('x-webhook-signature', 'dev-secret-123')
+        .set('x-webhook-signature', webhookSignature)
         .send(payload)
         .timeout(5000)
         .expect(200)
@@ -166,6 +173,7 @@ describe('API Contract Regression Tests', () => {
       
       if (!valid) {
         console.error('Schema validation errors:', validate.errors)
+        console.error('Response body:', response.body)
       }
       
       expect(valid).toBe(true)

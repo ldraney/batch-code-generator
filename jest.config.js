@@ -17,7 +17,7 @@ const customJestConfig = {
   ],
   coverageThreshold: {
     global: {
-      branches: 40, // Lowered for initial setup
+      branches: 40,
       functions: 40,
       lines: 40,
       statements: 40,
@@ -34,11 +34,17 @@ const customJestConfig = {
     '<rootDir>/tests/playwright-tests/',
     '<rootDir>/tests/load/',
   ],
-  // Handle require() calls in tests
-  transform: {},
+  // Ignore .next directory completely to avoid naming conflicts
+  modulePathIgnorePatterns: [
+    '<rootDir>/.next/',
+  ],
   // Clear mocks between tests to avoid interference
   clearMocks: true,
   restoreMocks: true,
+  // Avoid haste map conflicts
+  haste: {
+    enableSymlinks: false,
+  },
 }
 
 module.exports = createJestConfig(customJestConfig)

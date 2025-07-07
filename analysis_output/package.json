@@ -33,25 +33,16 @@
     "docker:test": "./scripts/test-docker.sh",
     "docker:logs": "docker-compose logs -f",
     "docker:down": "docker-compose down",
-    "docker:clean": "docker system prune -f && docker volume prune -f",
-    "setup:monday": "./scripts/setup-monday-integration.sh",
-    "test:monday": "./scripts/test-monday-integration.sh",
-    "db:init": "mkdir -p data && sqlite3 data/batch_codes.db < init-database.sql",
-    "db:query": "sqlite3 data/batch_codes.db",
-    "db:stats": "sqlite3 data/batch_codes.db 'SELECT COUNT(*) as total_codes, COUNT(DISTINCT monday_board_id) as boards FROM batch_codes;'",
-    "monday:test-connection": "node scripts/test-monday-connection.js",
-    "stress:test": "./scripts/stress-test.sh"
+    "docker:clean": "docker system prune -f && docker volume prune -f"
   },
   "dependencies": {
     "@sentry/nextjs": "^9.35.0",
-    "@types/sqlite3": "^3.1.11",
     "clsx": "^2.1.0",
     "date-fns": "^3.0.6",
     "next": "^14.2.30",
     "prom-client": "^15.1.0",
     "react": "^18",
     "react-dom": "^18",
-    "sqlite3": "^5.1.7",
     "tailwind-merge": "^2.2.1",
     "zod": "^3.22.4"
   },
