@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { recordWebhookRequest, recordCodeGeneration, incrementActiveJobs, decrementActiveJobs, recordError } from '@/lib/metrics';
-
-// Import Sentry conditionally to avoid errors if not configured
-let captureWebhookError: ((error: Error, context: Record<string, any>) => void) | null = null;
-try {
-  const sentry = require('@/lib/sentry');
-  captureWebhookError = sentry.captureWebhookError;
-} catch (error) {
-  console.warn('Sentry not available:', error);
-}
+import { captureWebhookError } from '@/lib/sentry';
 
 // Webhook payload schema
 const WebhookPayloadSchema = z.object({
@@ -52,11 +44,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
-    // Log error and capture in Sentry if available
+    // Log error and capture in Sentry
     console.error('Webhook error:', error);
-    if (captureWebhookError) {
-      captureWebhookError(error as Error, { request: request.url });
-    }
+    captureWebhookError(error as Error, { request: request.url });
     
     recordWebhookRequest('POST', '500', '/api/webhook');
     recordError(error instanceof z.ZodError ? 'validation' : 'processing');
