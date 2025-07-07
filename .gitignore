@@ -84,3 +84,6 @@ pnpm-lock.yaml
 
 # Keep package-lock.json for this project
 !package-lock.json
+
+# Sentry Config File
+.env.sentry-build-plugin

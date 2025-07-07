@@ -1,43 +1,15 @@
-import * as Sentry from '@sentry/nextjs';
+// This file configures the initialization of Sentry on the server.
+// The config you add here will be used whenever the server handles a request.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-const SENTRY_DSN = process.env.SENTRY_DSN;
+import * as Sentry from "@sentry/nextjs";
 
-if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    
-    // Performance monitoring
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-    
-    // Environment setup
-    environment: process.env.NODE_ENV || 'development',
-    release: process.env.VERCEL_GIT_COMMIT_SHA || process.env.FLY_ALLOC_ID || 'dev',
-    
-    // Enhanced error context
-    beforeSend(event, hint) {
-      // Add server-specific context
-      if (event.exception) {
-        event.tags = {
-          ...event.tags,
-          component: 'server',
-          node_version: process.version,
-          platform: process.platform,
-        };
-        
-        // Add memory usage context
-        event.contexts = {
-          ...event.contexts,
-          runtime: {
-            name: 'node',
-            version: process.version,
-          },
-          memory: process.memoryUsage(),
-        };
-      }
-      return event;
-    },
-    
-    // Debug in development
-    debug: process.env.NODE_ENV === 'development',
-  });
-}
+Sentry.init({
+  dsn: "https://47cb79fbf8a4cfddd83c9a70f7c68a8d@o4509625189466112.ingest.us.sentry.io/4509625198837760",
+
+  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1,
+
+  // Setting this option to true will print useful information to the console while you're setting up Sentry.
+  debug: false,
+});

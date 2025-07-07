@@ -1,13 +1,24 @@
-import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import * as Sentry from '@sentry/nextjs';
+import type { Metadata } from 'next';
 
-const inter = Inter({ subsets: ['latin'] });
+// Add or edit your "generateMetadata" to include the Sentry trace data:
+export function generateMetadata(): Metadata {
+  return {
+    // ... your existing metadata
+    other: {
+      ...Sentry.getTraceData()
+    }
+  };
+}
 
-export const metadata: Metadata = {
-  title: 'Batch Code Generator',
-  description: 'Generate code in batches via webhook',
-};
+// const inter = Inter({ subsets: ['latin'] });
+//
+// export const metadata: Metadata = {
+//   title: 'Batch Code Generator',
+//   description: 'Generate code in batches via webhook',
+// };
 
 export default function RootLayout({
   children,
@@ -20,3 +31,4 @@ export default function RootLayout({
     </html>
   );
 }
+
