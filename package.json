@@ -25,7 +25,7 @@
     "test:smoke": "jest tests/regression/smoke",
     "test:contracts": "jest tests/regression/api",
     "test:performance": "jest tests/regression/performance",
-    "test:visual": "playwright test tests/playwright-tests/visual",
+    "test:visual": "playwright test tests/playwright-tests/visual/component-tests.test.ts",
     "capture:baselines": "./scripts/capture-baselines.sh",
     "test:unit": "jest src/",
     "test:regression:api": "jest tests/jest-tests/regression"

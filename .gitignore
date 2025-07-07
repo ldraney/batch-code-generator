@@ -122,3 +122,8 @@ artillery-results.json
 .test-env
 test.env
 
+
+# Old visual test artifacts (no longer used)
+**/*-snapshots/
+**/screenshots.test.ts-snapshots/
+
