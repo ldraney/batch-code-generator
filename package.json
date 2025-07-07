@@ -40,7 +40,8 @@
     "db:query": "sqlite3 data/batch_codes.db",
     "db:stats": "sqlite3 data/batch_codes.db 'SELECT COUNT(*) as total_codes, COUNT(DISTINCT monday_board_id) as boards FROM batch_codes;'",
     "monday:test-connection": "node scripts/test-monday-connection.js",
-    "stress:test": "./scripts/stress-test.sh"
+    "stress:test": "./scripts/stress-test.sh",
+    "monday:list-columns": "node scripts/list-monday-columns.js"
   },
   "dependencies": {
     "@sentry/nextjs": "^9.35.0",
