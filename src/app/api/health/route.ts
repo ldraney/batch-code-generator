@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    // Basic health checks
     const health = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -9,10 +10,12 @@ export async function GET() {
       memory: process.memoryUsage(),
       version: process.env.npm_package_version || '0.1.0',
       environment: process.env.NODE_ENV || 'development',
+      sentry_enabled: !!process.env.SENTRY_DSN,
     };
 
     return NextResponse.json(health, { status: 200 });
   } catch (error) {
+    console.error('Health check error:', error);
     return NextResponse.json(
       { 
         status: 'unhealthy', 
