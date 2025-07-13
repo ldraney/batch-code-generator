@@ -118,12 +118,16 @@ export class MondayClient {
 /**
  * Update an item's column value (e.g., batch code column)
  */
+
   async updateItemColumn(
     boardId: string,
     itemId: string,
     columnId: string,
     value: string
   ): Promise<void> {
+    // Correct: place inside function body
+    await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+
     const query = `
       mutation ($boardId: ID!, $itemId: ID!, $columnId: String!, $value: JSON!) {
         change_column_value (
@@ -137,9 +141,7 @@ export class MondayClient {
       }
     `;
 
-    // Always wrap text values in JSON string for text columns:
-    // If value is already JSON, do not double stringify.
-    const payloadValue = JSON.stringify(value);
+    const payloadValue = JSON.stringify({ text: value });
 
     await this.executeQuery(query, {
       boardId,
