@@ -5,6 +5,8 @@
 
 # Testing
 /coverage
+/test-results/
+/playwright-report/
 
 # Next.js
 /.next/
@@ -23,12 +25,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Local env files
+# Environment files
 .env
 .env*.local
-.env.development.local
-.env.test.local
-.env.production.local
+!.env.local.example
 
 # Vercel
 .vercel
@@ -47,9 +47,6 @@ pids
 *.seed
 *.pid.lock
 
-# Docker
-.dockerignore
-
 # IDE files
 .vscode/
 .idea/
@@ -59,7 +56,6 @@ pids
 
 # OS files
 Thumbs.db
-.DS_Store
 
 # Monitoring data (local volumes)
 prometheus_data/
@@ -68,6 +64,7 @@ grafana-storage/
 
 # Sentry
 .sentryclirc
+.env.sentry-build-plugin
 
 # Temporary files
 *.tmp
@@ -75,56 +72,20 @@ grafana-storage/
 
 # Build artifacts
 dist/
-build/
 
-# Package manager
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# Monday.com data (local development)
+data/
+*.db
+*.sqlite
 
-# Keep package-lock.json for this project
-!package-lock.json
-
-# Sentry Config File
-.env.sentry-build-plugin
-
-# Test Results and Reports
-/test-results/
-/playwright-report/
-/coverage/
-
-# Jest Coverage
-/coverage.lcov
-
-# Test Artifacts
-*.test-result.json
-.last-run.json
-
-# Visual Test Snapshots (commit these!)
-# Note: We DO want to commit snapshots for visual regression
-# tests/playwright-tests/visual/screenshots.test.ts-snapshots/
-
-# Temporary test files
-test-webhook-debug.js
-fix-*.sh
+# Temporary scripts and debug files
+debug-*.js
 debug-*.sh
+fix-*.sh
 setup-*.sh
+analysis-*.sh
+test-webhook-debug.js
 
-# Test databases
-test.db
-test.sqlite
-
-# Load testing results
-artillery-report.html
-artillery-results.json
-
-# Local test configurations
-.test-env
-test.env
-
-
-# Old visual test artifacts (no longer used)
-**/*-snapshots/
-**/screenshots.test.ts-snapshots/
-
-test-diagnostics/
+# ngrok
+ngrok
+ngrok.yml
